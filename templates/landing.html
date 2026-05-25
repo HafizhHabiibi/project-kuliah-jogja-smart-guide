@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Beranda{% endblock %}
+
+{% block navbar_class %}{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero" id="hero">
+    <div class="hero-bg">
+        <img src="{{ url_for('static', filename='images/hero-bg.png') }}" alt="Yogyakarta" loading="eager">
+    </div>
+    <div class="hero-overlay"></div>
+
+    <div class="hero-content">
+        <div class="hero-badge animate-fade-in-up">
+            <span class="badge-dot"></span>
+            <span>Rekomendasi Wisata Cerdas</span>
+        </div>
+
+        <h1 class="hero-title animate-fade-in-up animate-delay-1">
+            Temukan Keajaiban<br><span class="highlight">Yogyakarta</span>
+        </h1>
+
+        <p class="hero-subtitle animate-fade-in-up animate-delay-2">
+            Jelajahi destinasi wisata terbaik di Yogyakarta dengan rekomendasi cerdas berbasis cuaca real-time, rating, dan preferensi Anda.
+        </p>
+
+        <div class="hero-actions animate-fade-in-up animate-delay-3">
+            <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline btn-lg" id="btn-explore">
+                <span class="material-icons btn-icon-mi">explore</span> Mulai Jelajahi
+            </a>
+            {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline btn-lg" id="btn-hero-login">
+                <span class="material-icons btn-icon-mi">lock</span> Login
+            </a>
+            {% else %}
+            <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline btn-lg" id="btn-hero-dashboard">
+                <span class="material-icons btn-icon-mi">dashboard</span> Dashboard
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section" id="features">
+    <div class="container">
+        <div class="section-header reveal">
+            <span class="section-label">Fitur Unggulan</span>
+            <h2 class="section-title">Wisata Lebih Cerdas</h2>
+            <p class="section-subtitle">
+                Dapatkan rekomendasi destinasi wisata yang dipersonalisasi sesuai kondisi dan preferensi Anda.
+            </p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card reveal">
+                <div class="feature-icon"><span class="material-icons">cloud_queue</span></div>
+                <h3>Info Cuaca Real-Time</h3>
+                <p>Pantau kondisi cuaca terkini di setiap destinasi. Lihat suhu, curah hujan, kecepatan angin, dan tutupan awan sebelum berkunjung.</p>
+            </div>
+
+            <div class="feature-card reveal">
+                <div class="feature-icon"><span class="material-icons">star_rate</span></div>
+                <h3>Rating & Ulasan</h3>
+                <p>Lihat rating dari pengunjung lain untuk membantu Anda memilih destinasi terbaik yang sesuai dengan ekspektasi.</p>
+            </div>
+
+            <div class="feature-card reveal">
+                <div class="feature-icon"><span class="material-icons">track_changes</span></div>
+                <h3>Rekomendasi Personal</h3>
+                <p>Setelah login, atur preferensi wisata Anda dan dapatkan rekomendasi destinasi yang dipersonalisasi khusus untuk Anda.</p>
+            </div>
+
+            <div class="feature-card reveal">
+                <div class="feature-icon"><span class="material-icons">payments</span></div>
+                <h3>Info Harga Tiket</h3>
+                <p>Ketahui harga tiket masuk setiap destinasi sebelum berkunjung. Rencanakan anggaran perjalanan Anda dengan mudah.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section" id="stats">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-item reveal">
+                <div class="stat-number">12+</div>
+                <div class="stat-label">Destinasi Wisata</div>
+            </div>
+            <div class="stat-item reveal">
+                <div class="stat-number">4</div>
+                <div class="stat-label">Parameter Cuaca</div>
+            </div>
+            <div class="stat-item reveal">
+                <div class="stat-number">6</div>
+                <div class="stat-label">Kategori Wisata</div>
+            </div>
+            <div class="stat-item reveal">
+                <div class="stat-number">24/7</div>
+                <div class="stat-label">Update Real-Time</div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+{% endblock %}

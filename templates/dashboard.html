@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block navbar_class %}solid{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="container">
+            <h1>Destinasi Wisata Yogyakarta</h1>
+            <p>Temukan tempat wisata terbaik untuk dikunjungi hari ini</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Top Wide Weather Card -->
+        <div class="sidebar-card user-weather-card white-theme animate-fade-in-up" style="margin-bottom: var(--space-8);">
+            <div class="user-weather-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-4); margin-bottom: var(--space-6);">
+                <div style="display: flex; align-items: center; gap: var(--space-3);">
+                    <span class="material-icons location-icon" style="color: var(--color-primary); font-size: 24px;">my_location</span>
+                    <div>
+                        <h4 class="weather-title" style="margin: 0; font-size: var(--text-base); font-weight: 700; color: var(--color-text);">Kondisi Cuaca Anda</h4>
+                        <p class="weather-subtitle" style="margin: 0; font-size: var(--text-xs); color: var(--color-text-secondary);">Yogyakarta, Indonesia</p>
+                    </div>
+                </div>
+                <div class="card-badge" style="background: var(--color-primary-subtle); color: var(--color-primary); border: 1px solid rgba(13, 148, 136, 0.15); font-size: 10px; font-weight: 800; padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); letter-spacing: 0.05em; box-shadow: none;">LIVE</div>
+            </div>
+            
+            <div class="user-weather-details-row">
+                <!-- Suhu -->
+                <div class="weather-detail-item">
+                    <span class="material-icons detail-icon" style="color: var(--color-primary);">thermostat</span>
+                    <div>
+                        <span class="detail-val">29.5°C</span>
+                        <span class="detail-lbl">Suhu</span>
+                    </div>
+                </div>
+                <!-- Hujan -->
+                <div class="weather-detail-item">
+                    <span class="material-icons detail-icon" style="color: var(--color-primary);">water_drop</span>
+                    <div>
+                        <span class="detail-val">0.0 mm</span>
+                        <span class="detail-lbl">Hujan</span>
+                    </div>
+                </div>
+                <!-- Awan -->
+                <div class="weather-detail-item">
+                    <span class="material-icons detail-icon" style="color: var(--color-primary);">cloud</span>
+                    <div>
+                        <span class="detail-val">45%</span>
+                        <span class="detail-lbl">Awan</span>
+                    </div>
+                </div>
+                <!-- Angin -->
+                <div class="weather-detail-item">
+                    <span class="material-icons detail-icon" style="color: var(--color-primary);">air</span>
+                    <div>
+                        <span class="detail-val">3.5 m/s</span>
+                        <span class="detail-lbl">Angin</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search & Filter Bar -->
+        <div class="search-filter-bar" id="search-filter-bar">
+            <div class="search-input-wrapper">
+                <span class="material-icons search-icon">search</span>
+                <input
+                    type="text"
+                    class="search-input"
+                    id="search-input"
+                    placeholder="Cari destinasi wisata..."
+                    autocomplete="off"
+                >
+            </div>
+            <select class="filter-select" id="filter-category">
+                <option value="">Semua Kategori</option>
+                <option value="Sejarah">Sejarah</option>
+                <option value="Alam">Alam</option>
+                <option value="Pantai">Pantai</option>
+                <option value="Budaya">Budaya</option>
+                <option value="Belanja">Belanja</option>
+                <option value="Hiburan">Hiburan</option>
+            </select>
+            <select class="filter-select" id="sort-by">
+                <option value="random">Acak</option>
+                <option value="rating">Rating Tertinggi</option>
+                <option value="price-low">Harga Terendah</option>
+                <option value="price-high">Harga Tertinggi</option>
+                <option value="name">Nama A-Z</option>
+            </select>
+        </div>
+
+        <!-- Cards Grid -->
+        <div class="cards-grid" id="cards-grid">
+            <!-- Cards will be rendered by JavaScript -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" style="display: none; text-align: center; padding: 4rem 1rem;">
+            <div class="empty-state-icon" style="margin-bottom: 1rem;"><span class="material-icons" style="font-size: 3.5rem; color: var(--color-text-muted);">search_off</span></div>
+            <h3 style="color: var(--color-text); margin-bottom: 0.5rem;">Tidak ada destinasi ditemukan</h3>
+            <p style="color: var(--color-text-secondary);">Coba ubah kata kunci pencarian atau filter kategori Anda.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Destination Detail Modal -->
+<div class="dest-modal-overlay" id="detail-modal" style="display: none;">
+    <div class="dest-modal">
+        <!-- Close Button -->
+        <button class="dest-modal-close" onclick="closeDetailModal()" aria-label="Tutup">
+            <span class="material-icons" style="font-size: 20px;">close</span>
+        </button>
+
+        <div class="dest-modal-grid">
+            <!-- Left Side: Cover Image -->
+            <div class="dest-modal-left">
+                <img src="" alt="" id="modal-img">
+            </div>
+
+            <!-- Right Side: Detailed Scrollable Information -->
+            <div class="dest-modal-right">
+                <!-- Modal Sticky Header -->
+                <div class="dest-modal-header">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-2);">
+                        <span class="dest-modal-cat-badge" id="modal-cat">Kategori</span>
+                        <div class="dest-modal-rating-price">
+                            <div class="dest-modal-rating">
+                                <span class="material-icons" style="color: #FBBF24; font-size: 16px; vertical-align: middle;">star</span>
+                                <span id="modal-rating" style="vertical-align: middle;">4.8</span>
+                            </div>
+                            <div class="dest-modal-price">
+                                <span class="material-icons" style="color: var(--color-primary); font-size: 16px; vertical-align: middle;">payments</span>
+                                <span id="modal-price" style="vertical-align: middle;">Rp 50.000</span>
+                            </div>
+                        </div>
+                    </div>
+                    <h2 class="dest-modal-title" id="modal-title">Nama Destinasi</h2>
+                </div>
+
+                <!-- Modal Body (Scrollable) -->
+                <div class="dest-modal-body">
+                    <!-- Jarak User (Hanya jika Login) -->
+                    <div class="dest-modal-section" id="modal-distance-section" style="display: none;">
+                        <h4 class="section-title-small"><span class="material-icons">near_me</span> Lokasi & Jarak</h4>
+                        <div class="dest-card-distance" id="modal-distance-box" style="margin-bottom: 0;">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Section: Deskripsi -->
+                    <div class="dest-modal-section">
+                        <h4 class="section-title-small"><span class="material-icons">info</span> Deskripsi</h4>
+                        <p class="dest-modal-desc" id="modal-desc">Deskripsi tempat wisata...</p>
+                    </div>
+
+                    <!-- Section: Cuaca Terkini -->
+                    <div class="dest-modal-section">
+                        <h4 class="section-title-small"><span class="material-icons">cloud_queue</span> Kondisi Cuaca Real-Time</h4>
+                        <div class="weather-widget modal-weather-widget" id="modal-weather-widget">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Section: Parameter Scoring Dashboard -->
+                    <div class="dest-modal-section">
+                        <h4 class="section-title-small"><span class="material-icons">analytics</span> Parameter Scoring</h4>
+                        <div class="params-dashboard-grid">
+                            <!-- Nature Parameter -->
+                            <div class="param-dash-card border-nature">
+                                <div class="param-dash-header">
+                                    <span class="material-icons" style="color: #10B981;">park</span>
+                                    <h5>Nature</h5>
+                                </div>
+                                <div class="param-dash-body">
+                                    <div class="score-indicator">
+                                        <span class="score-lbl-small">Visual Dominan:</span>
+                                        <div class="score-bar-bg"><div class="score-bar-fill bg-nature" id="score-nature-visual"></div></div>
+                                        <span class="score-num-small" id="txt-nature-visual">3/5</span>
+                                    </div>
+                                    <div class="param-list-tags" id="tags-nature-act"></div>
+                                    <div class="param-list-tags" id="tags-nature-elem"></div>
+                                </div>
+                            </div>
+
+                            <!-- Crowd Parameter -->
+                            <div class="param-dash-card border-crowd">
+                                <div class="param-dash-header">
+                                    <span class="material-icons" style="color: #F97316;">groups</span>
+                                    <h5>Crowd</h5>
+                                </div>
+                                <div class="param-dash-body">
+                                    <div class="crowd-scores-row">
+                                        <div class="crowd-score-sub">
+                                            <span class="sub-score-lbl">Review</span>
+                                            <span class="sub-score-val" id="score-crowd-review">4/5</span>
+                                        </div>
+                                        <div class="crowd-score-sub">
+                                            <span class="sub-score-lbl">Rating</span>
+                                            <span class="sub-score-val" id="score-crowd-rating">5/5</span>
+                                        </div>
+                                        <div class="crowd-score-sub">
+                                            <span class="sub-score-lbl">Hashtag</span>
+                                            <span class="sub-score-val" id="score-crowd-hashtag">3/5</span>
+                                        </div>
+                                    </div>
+                                    <div class="param-list-tags" id="tags-crowd-act"></div>
+                                    <div class="param-list-tags" id="tags-crowd-fac"></div>
+                                </div>
+                            </div>
+
+                            <!-- Culinary Parameter -->
+                            <div class="param-dash-card border-culinary">
+                                <div class="param-dash-header">
+                                    <span class="material-icons" style="color: #EF4444;">restaurant</span>
+                                    <h5>Culinary</h5>
+                                </div>
+                                <div class="param-dash-body">
+                                    <div class="param-list-tags" id="tags-culinary-fac"></div>
+                                    <div class="param-list-tags" id="tags-culinary-act"></div>
+                                    <div class="param-list-tags" id="tags-culinary-type"></div>
+                                </div>
+                            </div>
+
+                            <!-- Culture Parameter -->
+                            <div class="param-dash-card border-culture">
+                                <div class="param-dash-header">
+                                    <span class="material-icons" style="color: #6366F1;">account_balance</span>
+                                    <h5>Culture</h5>
+                                </div>
+                                <div class="param-dash-body">
+                                    <div class="param-list-tags" id="tags-culture-heritage"></div>
+                                    <div class="param-list-tags" id="tags-culture-act"></div>
+                                    <div class="param-list-tags" id="tags-culture-elem"></div>
+                                </div>
+                            </div>
+
+                            <!-- Effort Parameter -->
+                            <div class="param-dash-card border-effort">
+                                <div class="param-dash-header">
+                                    <span class="material-icons" style="color: #06B6D4;">directions_walk</span>
+                                    <h5>Effort</h5>
+                                </div>
+                                <div class="param-dash-body">
+                                    <div class="param-list-tags" id="tags-effort-acc"></div>
+                                    <div class="param-list-tags" id="tags-effort-eff"></div>
+                                    <div class="param-list-tags" id="tags-effort-mob"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script id="destinations-data" type="application/json">
+    {{ destinations | tojson | safe }}
+</script>
+<script id="user-logged-in" type="application/json">
+    {{ 'true' if current_user.is_authenticated else 'false' }}
+</script>
+<script>
+    // Safely parse variables from script tags to avoid IDE syntax highlighting warnings
+    const DESTINATIONS_DATA = JSON.parse(document.getElementById('destinations-data').textContent);
+    const IS_USER_LOGGED_IN = document.getElementById('user-logged-in').textContent.trim() === 'true';
+</script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

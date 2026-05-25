@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Jogja Smart Guide — Temukan destinasi wisata terbaik di Yogyakarta dengan rekomendasi cerdas berbasis cuaca, rating, dan preferensi Anda.">
+    <meta name="keywords" content="wisata yogyakarta, jogja, rekomendasi wisata, smart guide, pariwisata">
+    <meta name="author" content="Jogja Smart Guide">
+    <title>{% block title %}Jogja Smart Guide{% endblock %} — Wisata Yogyakarta</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar {% block navbar_class %}{% endblock %}" id="navbar">
+        <div class="container">
+            <a href="{{ url_for('dashboard.landing') }}" class="navbar-brand" id="navbar-brand">
+                <div class="brand-icon"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="brand-logo-img"></div>
+                <span>Jogja Smart Guide</span>
+            </a>
+
+            <div class="navbar-nav" id="navbar-nav">
+                {% if current_user.is_authenticated %}
+                    {% if current_user.is_admin %}
+                        <a href="{{ url_for('admin.index') }}" class="nav-link" id="nav-admin-panel" style="color: var(--color-primary); font-weight: 700;">Admin Panel</a>
+                    {% else %}
+                        <a href="{{ url_for('dashboard.index') }}" class="nav-link" id="nav-dashboard">Dashboard</a>
+                    {% endif %}
+                    <div class="avatar-wrapper" id="avatar-wrapper">
+                        <button class="avatar-btn" id="avatar-btn" aria-label="User menu">
+                            {{ current_user.username[0]|upper }}
+                        </button>
+                        <div class="avatar-dropdown" id="avatar-dropdown">
+                            <div class="dropdown-header">
+                                <div class="user-name">{{ current_user.username }}</div>
+                                <div class="user-email">{{ current_user.email }}</div>
+                                {% if current_user.is_admin %}
+                                <div style="font-size: 10px; font-weight: 700; color: var(--color-primary); letter-spacing: 0.05em; margin-top: 2px;">ADMINISTRATOR</div>
+                                {% endif %}
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            {% if current_user.is_admin %}
+                            <a href="{{ url_for('admin.index') }}" class="dropdown-item" id="nav-admin-dash">
+                                <span class="material-icons" style="font-size: 18px;">admin_panel_settings</span> Admin Dashboard
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            {% else %}
+                            <a href="{{ url_for('profile.index') }}" class="dropdown-item" id="nav-profile">
+                                <span class="material-icons" style="font-size: 18px;">person</span> Profil Saya
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            {% endif %}
+                            <a href="{{ url_for('auth.logout') }}" class="dropdown-item danger" id="nav-logout">
+                                <span class="material-icons" style="font-size: 18px;">logout</span> Logout
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    {% block nav_guest %}
+                        <a href="{{ url_for('dashboard.index') }}" class="nav-link" id="nav-explore">Jelajahi</a>
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-sm" id="nav-login">Login</a>
+                    {% endblock %}
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages" id="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}" role="alert">
+                        <span>
+                            {% if category == 'success' %}
+                                <span class="material-icons" style="color: var(--color-success); font-size: 20px;">check_circle</span>
+                            {% elif category == 'error' %}
+                                <span class="material-icons" style="color: var(--color-error); font-size: 20px;">error</span>
+                            {% else %}
+                                <span class="material-icons" style="color: var(--color-info); font-size: 20px;">info</span>
+                            {% endif %}
+                        </span>
+                        <span>{{ message }}</span>
+                        <button class="flash-close" onclick="this.parentElement.remove()" style="display: flex; align-items: center; justify-content: center; padding: 2px;">
+                            <span class="material-icons" style="font-size: 16px;">close</span>
+                        </button>
+                    </div>
+
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    {% block footer %}
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <!-- Kolom 1: Brand & Tagline & Sosmed -->
+                <div class="footer-col brand-col">
+                    <div class="footer-brand">
+                        <div class="brand-icon"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="brand-logo-img"></div>
+                        <span>Jogja Smart Guide</span>
+                    </div>
+                    <p class="footer-tagline">Panduan pariwisata cerdas Yogyakarta berbasis cuaca, rating, dan preferensi untuk pengalaman perjalanan terbaik Anda.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-btn" aria-label="Instagram">
+                            <span class="material-icons social-icon">camera_alt</span>
+                        </a>
+                        <a href="#" class="social-btn" aria-label="Facebook">
+                            <span class="material-icons social-icon">facebook</span>
+                        </a>
+                        <a href="#" class="social-btn" aria-label="YouTube">
+                            <span class="material-icons social-icon">play_circle</span>
+                        </a>
+                        <a href="#" class="social-btn" aria-label="Twitter">
+                            <span class="material-icons social-icon">flutter_dash</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Kolom 2: Layanan -->
+                <div class="footer-col">
+                    <h3>Layanan</h3>
+                    <ul class="footer-menu">
+                        <li><a href="{{ url_for('dashboard.index') }}">Jelajah Wisata</a></li>
+                        <li><a href="{{ url_for('dashboard.index') }}#weather-widget">Rekomendasi Pintar</a></li>
+                        <li><a href="{{ url_for('dashboard.index') }}#weather-widget">Cuaca Terkini</a></li>
+                        {% if current_user.is_authenticated %}
+                            <li><a href="{{ url_for('profile.index') }}">Profil Saya</a></li>
+                        {% else %}
+                            <li><a href="{{ url_for('auth.login') }}">Profil Saya</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <!-- Kolom 3: Tautan Cepat -->
+                <div class="footer-col">
+                    <h3>Tautan Cepat</h3>
+                    <ul class="footer-menu">
+                        <li><a href="{{ url_for('dashboard.landing') }}">Beranda</a></li>
+                        <li><a href="#">Tentang Jogja</a></li>
+                        <li><a href="#">Pusat Bantuan</a></li>
+                        <li><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+
+                <!-- Kolom 4: Kontak -->
+                <div class="footer-col contact-col">
+                    <h3>Kontak</h3>
+                    <ul class="footer-contact-info">
+                        <li>
+                            <span class="material-icons contact-icon">place</span>
+                            <span class="contact-text">Yogyakarta, Indonesia</span>
+                        </li>
+                        <li>
+                            <span class="material-icons contact-icon">email</span>
+                            <a href="mailto:info@jogjasmartguide.com" class="contact-text">info@jogjasmartguide.com</a>
+                        </li>
+                        <li>
+                            <span class="material-icons contact-icon">phone</span>
+                            <a href="tel:+6281234567890" class="contact-text">+62 812-3456-7890</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bottom Bar -->
+            <div class="footer-bottom">
+                <div class="footer-bottom-content">
+                    <p class="copyright">&copy; 2026 Jogja Smart Guide Dev. Dibuat untuk pariwisata Yogyakarta.</p>
+                    <div class="footer-bottom-links">
+                        <a href="#">Kebijakan Privasi</a>
+                        <a href="#">Syarat & Ketentuan</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    {% endblock %}
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

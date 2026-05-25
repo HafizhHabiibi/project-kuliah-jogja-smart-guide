@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Jogja Smart Guide — Admin Dashboard CMS">
+    <title>{% block title %}Admin{% endblock %} — JSG Admin</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="admin-body">
+    <!-- Admin Sidebar -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+        <div class="admin-sidebar-header">
+            <a href="{{ url_for('admin.index') }}" class="admin-brand">
+                <div class="admin-brand-icon">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="brand-logo-img">
+                </div>
+                <div class="admin-brand-text">
+                    <span class="admin-brand-name">JSG Admin</span>
+                    <span class="admin-brand-label">Content Management</span>
+                </div>
+            </a>
+        </div>
+
+        <nav class="admin-nav">
+            <div class="admin-nav-section">
+                <span class="admin-nav-label">MENU UTAMA</span>
+                <a href="{{ url_for('admin.index') }}" class="admin-nav-item {% if request.endpoint == 'admin.index' %}active{% endif %}" id="nav-admin-dashboard">
+                    <span class="material-icons">dashboard</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('admin.add_destination') }}" class="admin-nav-item {% if request.endpoint == 'admin.add_destination' %}active{% endif %}" id="nav-admin-add">
+                    <span class="material-icons">add_location_alt</span>
+                    <span>Tambah Destinasi</span>
+                </a>
+            </div>
+
+            <div class="admin-nav-section">
+                <span class="admin-nav-label">NAVIGASI</span>
+                <a href="{{ url_for('dashboard.index') }}" class="admin-nav-item" id="nav-admin-user-dash" target="_blank">
+                    <span class="material-icons">public</span>
+                    <span>Lihat Situs User</span>
+                </a>
+                <a href="{{ url_for('dashboard.landing') }}" class="admin-nav-item" id="nav-admin-landing" target="_blank">
+                    <span class="material-icons">home</span>
+                    <span>Landing Page</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="admin-sidebar-footer">
+            <div class="admin-user-info">
+                <div class="admin-user-avatar">{{ current_user.username[0]|upper }}</div>
+                <div class="admin-user-details">
+                    <span class="admin-user-name">{{ current_user.username }}</span>
+                    <span class="admin-user-role">Administrator</span>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="admin-nav-item admin-logout-btn" id="nav-admin-logout">
+                <span class="material-icons">logout</span>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Admin Main Content -->
+    <div class="admin-main">
+        <!-- Admin Topbar -->
+        <header class="admin-topbar">
+            <div class="admin-topbar-left">
+                <button class="admin-menu-toggle" id="admin-menu-toggle" aria-label="Toggle sidebar">
+                    <span class="material-icons">menu</span>
+                </button>
+                <div class="admin-breadcrumb">
+                    <span class="material-icons" style="font-size: 18px; color: var(--color-text-muted);">admin_panel_settings</span>
+                    <span>{% block breadcrumb %}Dashboard{% endblock %}</span>
+                </div>
+            </div>
+            <div class="admin-topbar-right">
+                <span class="admin-topbar-badge">
+                    <span class="material-icons" style="font-size: 18px;">verified</span>
+                    Admin
+                </span>
+            </div>
+        </header>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages admin-flash" id="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}" role="alert">
+                            <span>
+                                {% if category == 'success' %}
+                                    <span class="material-icons" style="color: var(--color-success); font-size: 20px;">check_circle</span>
+                                {% elif category == 'error' %}
+                                    <span class="material-icons" style="color: var(--color-error); font-size: 20px;">error</span>
+                                {% else %}
+                                    <span class="material-icons" style="color: var(--color-info); font-size: 20px;">info</span>
+                                {% endif %}
+                            </span>
+                            <span>{{ message }}</span>
+                            <button class="flash-close" onclick="this.parentElement.remove()" style="display: flex; align-items: center; justify-content: center; padding: 2px;">
+                                <span class="material-icons" style="font-size: 16px;">close</span>
+                            </button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Page Content -->
+        <div class="admin-content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

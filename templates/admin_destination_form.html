@@ -1,0 +1,561 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}{{ 'Edit' if editing else 'Tambah' }} Destinasi{% endblock %}
+{% block breadcrumb %}
+    <a href="{{ url_for('admin.index') }}" style="color: var(--color-text-muted); text-decoration: none;">Dashboard</a>
+    <span class="material-icons" style="font-size: 16px; color: var(--color-text-muted);">chevron_right</span>
+    {{ 'Edit' if editing else 'Tambah' }} Destinasi
+{% endblock %}
+
+{% block content %}
+<form method="POST" enctype="multipart/form-data" class="admin-dest-form" id="destination-form">
+    {% if editing and destination %}
+        <input type="hidden" name="existing_photo_url" value="{{ destination.photo_url }}">
+    {% endif %}
+
+    <!-- Section 1: Informasi Dasar -->
+    <div class="admin-form-section">
+        <div class="admin-form-section-header">
+            <div class="admin-form-section-icon" style="background: linear-gradient(135deg, #0D9488, #10B981);">
+                <span class="material-icons">info</span>
+            </div>
+            <div>
+                <h3>Informasi Dasar</h3>
+                <p>Data utama destinasi wisata</p>
+            </div>
+        </div>
+
+        <div class="admin-form-grid">
+            <!-- Photo Upload -->
+            <div class="admin-form-group admin-form-full">
+                <label for="photo">
+                    <span class="material-icons" style="font-size: 18px;">photo_camera</span> Foto Destinasi
+                    {% if not editing %}<span class="required">*</span>{% endif %}
+                </label>
+                <div class="admin-photo-upload" id="photo-upload-area">
+                    <input type="file" name="photo" id="photo" accept="image/*" {% if not editing %}required{% endif %}>
+                    <div class="admin-photo-preview" id="photo-preview">
+                        {% if editing and destination %}
+                            <img src="{{ destination.photo_url }}" alt="Preview" id="preview-img">
+                            <span class="admin-photo-change">Klik untuk ganti foto</span>
+                        {% else %}
+                            <span class="material-icons" style="font-size: 48px; color: var(--color-text-muted);">add_photo_alternate</span>
+                            <span style="color: var(--color-text-secondary); font-size: var(--text-sm);">Klik atau seret foto ke sini</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Name -->
+            <div class="admin-form-group admin-form-full">
+                <label for="name">
+                    <span class="material-icons" style="font-size: 18px;">place</span> Nama Tempat Wisata <span class="required">*</span>
+                </label>
+                <input type="text" name="name" id="name" required placeholder="Contoh: Candi Prambanan"
+                       value="{{ destination.name if editing and destination else '' }}">
+            </div>
+
+            <!-- Description -->
+            <div class="admin-form-group admin-form-full">
+                <label for="description">
+                    <span class="material-icons" style="font-size: 18px;">description</span> Deskripsi <span class="required">*</span>
+                </label>
+                <textarea name="description" id="description" rows="4" required placeholder="Deskripsi lengkap destinasi wisata...">{{ destination.description if editing and destination else '' }}</textarea>
+            </div>
+
+            <!-- Latitude -->
+            <div class="admin-form-group">
+                <label for="latitude">
+                    <span class="material-icons" style="font-size: 18px;">my_location</span> Latitude <span class="required">*</span>
+                </label>
+                <input type="number" name="latitude" id="latitude" step="0.0001" required placeholder="-7.7520"
+                       value="{{ destination.latitude if editing and destination else '' }}">
+            </div>
+
+            <!-- Longitude -->
+            <div class="admin-form-group">
+                <label for="longitude">
+                    <span class="material-icons" style="font-size: 18px;">my_location</span> Longitude <span class="required">*</span>
+                </label>
+                <input type="number" name="longitude" id="longitude" step="0.0001" required placeholder="110.4914"
+                       value="{{ destination.longitude if editing and destination else '' }}">
+            </div>
+
+            <!-- Rating -->
+            <div class="admin-form-group">
+                <label for="rating">
+                    <span class="material-icons" style="font-size: 18px;">star</span> Rating (0-5)
+                </label>
+                <input type="number" name="rating" id="rating" min="0" max="5" step="0.1" placeholder="4.5"
+                       value="{{ destination.rating if editing and destination else '' }}">
+            </div>
+
+            <!-- Price -->
+            <div class="admin-form-group">
+                <label for="price">
+                    <span class="material-icons" style="font-size: 18px;">payments</span> Harga Tiket (Rp)
+                </label>
+                <input type="number" name="price" id="price" min="0" placeholder="50000"
+                       value="{{ destination.price if editing and destination else '0' }}">
+            </div>
+
+            <!-- Category -->
+            <div class="admin-form-group">
+                <label for="category">
+                    <span class="material-icons" style="font-size: 18px;">category</span> Kategori <span class="required">*</span>
+                </label>
+                <select name="category" id="category" required>
+                    <option value="">Pilih Kategori</option>
+                    {% set categories = ['Sejarah', 'Alam', 'Pantai', 'Budaya', 'Belanja', 'Hiburan'] %}
+                    {% for cat in categories %}
+                        <option value="{{ cat }}" {% if editing and destination and destination.category == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2: Parameter Nature -->
+    <div class="admin-form-section">
+        <div class="admin-form-section-header">
+            <div class="admin-form-section-icon" style="background: linear-gradient(135deg, #22C55E, #16A34A);">
+                <span class="material-icons">park</span>
+            </div>
+            <div>
+                <h3>Parameter: Nature</h3>
+                <p>Aspek alam dan lingkungan destinasi</p>
+            </div>
+        </div>
+
+        <!-- Nature Visual Score -->
+        <div class="admin-form-group admin-form-full">
+            <label class="param-label">
+                <span class="material-icons" style="font-size: 18px;">visibility</span> Kondisi Visual Dominan
+            </label>
+            <div class="score-radio-group">
+                {% set nature_visual_labels = {
+                    1: 'Hampir seluruh area berupa bangunan/jalan/beton',
+                    2: 'Unsur alam sangat sedikit',
+                    3: 'Unsur alami dan buatan relatif seimbang',
+                    4: 'Unsur alami lebih dominan',
+                    5: 'Hampir seluruh area berupa unsur alami'
+                } %}
+                {% for score, label in nature_visual_labels.items() %}
+                <label class="score-radio-item">
+                    <input type="radio" name="nature_visual" value="{{ score }}"
+                           {% if editing and destination and destination.nature_visual == score %}checked{% endif %}
+                           {% if not editing and score == 3 %}checked{% endif %}>
+                    <div class="score-radio-card">
+                        <span class="score-number">{{ score }}</span>
+                        <span class="score-label">{{ label }}</span>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Nature Activities -->
+        <div class="admin-form-group admin-form-full">
+            <label class="param-label">
+                <span class="material-icons" style="font-size: 18px;">directions_run</span> Aktivitas Outdoor
+            </label>
+            {% set nature_act_options = ['Hiking', 'Camping', 'Surfing', 'Snorkeling', 'ATV', 'Bersepeda', 'Joging', 'Outbond', 'Panjat tebing', 'Memancing', 'Boat tour', 'Swimming outdoor'] %}
+            <div class="checkbox-grid">
+                {% for opt in nature_act_options %}
+                <label class="checkbox-item">
+                    <input type="checkbox" name="nature_activities" value="{{ opt }}"
+                           {% if editing and destination %}data-check="{{ opt }}" class="nature-act-cb"{% endif %}>
+                    <span class="checkbox-label">{{ opt }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Nature Elements -->
+        <div class="admin-form-group admin-form-full">
+            <label class="param-label">
+                <span class="material-icons" style="font-size: 18px;">terrain</span> Elemen Alam
+            </label>
+            {% set nature_elem_options = ['Pantai', 'Laut', 'Gunung', 'Hutan', 'Sungai', 'Air terjun', 'Danau', 'Tebing alami', 'Vegetasi dominan', 'Sunset/Sunrise'] %}
+            <div class="checkbox-grid">
+                {% for opt in nature_elem_options %}
+                <label class="checkbox-item">
+                    <input type="checkbox" name="nature_elements" value="{{ opt }}"
+                           {% if editing and destination %}data-check="{{ opt }}" class="nature-elem-cb"{% endif %}>
+                    <span class="checkbox-label">{{ opt }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 3: Parameter Crowd -->
+    <div class="admin-form-section">
+        <div class="admin-form-section-header">
+            <div class="admin-form-section-icon" style="background: linear-gradient(135deg, #F97316, #F59E0B);">
+                <span class="material-icons">groups</span>
+            </div>
+            <div>
+                <h3>Parameter: Crowd</h3>
+                <p>Tingkat keramaian dan popularitas destinasi</p>
+            </div>
+        </div>
+
+        <!-- Crowd Review Count -->
+        <div class="admin-form-group admin-form-full">
+            <label class="param-label">
+                <span class="material-icons" style="font-size: 18px;">rate_review</span> Jumlah Review
+            </label>
+            <div class="score-radio-group">
+                {% set crowd_review_labels = {
+                    1: '< 100 review',
+                    2: '100 — 999 review',
+                    3: '1.000 — 4.999 review',
+                    4: '5.000 — 19.999 review',
+                    5: '≥ 20.000 review'
+                } %}
+                {% for score, label in crowd_review_labels.items() %}
+                <label class="score-radio-item">
+                    <input type="radio" name="crowd_review_count" value="{{ score }}"
+                           {% if editing and destination and destination.crowd_review_count == score %}checked{% endif %}
+                           {% if not editing and score == 1 %}checked{% endif %}>
+                    <div class="score-radio-card">
+                        <span class="score-number">{{ score }}</span>
+                        <span class="score-label">{{ label }}</span>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Crowd Rating -->
+        <div class="admin-form-group admin-form-full">
+            <label class="param-label">
+                <span class="material-icons" style="font-size: 18px;">star_half</span> Rating
+            </label>
+            <div class="score-radio-group">
+                {% set crowd_rating_labels = {
+                    1: '< 3.5',
+                    2: '3.5 — 3.9',
+                    3: '4.0 — 4.2',
+                    4: '4.3 — 4.5',
+                    5: '> 4.5'
+                } %}
+                {% for score, label in crowd_rating_labels.items() %}
+                <label class="score-radio-item">
+                    <input type="radio" name="crowd_rating" value="{{ score }}"
+                           {% if editing and destination and destination.crowd_rating == score %}checked{% endif %}
+                           {% if not editing and score == 3 %}checked{% endif %}>
+                    <div class="score-radio-card">
+                        <span class="score-number">{{ score }}</span>
+                        <span class="score-label">{{ label }}</span>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Crowd Hashtag -->
+        <div class="admin-form-group admin-form-full">
+            <label class="param-label">
+                <span class="material-icons" style="font-size: 18px;">tag</span> Jumlah Hashtag
+            </label>
+            <div class="score-radio-group">
+                {% set crowd_hashtag_labels = {
+                    1: '< 1.000',
+                    2: '1.000 — 9.999',
+                    3: '10.000 — 49.999',
+                    4: '50.000 — 199.999',
+                    5: '≥ 200.000'
+                } %}
+                {% for score, label in crowd_hashtag_labels.items() %}
+                <label class="score-radio-item">
+                    <input type="radio" name="crowd_hashtag" value="{{ score }}"
+                           {% if editing and destination and destination.crowd_hashtag == score %}checked{% endif %}
+                           {% if not editing and score == 1 %}checked{% endif %}>
+                    <div class="score-radio-card">
+                        <span class="score-number">{{ score }}</span>
+                        <span class="score-label">{{ label }}</span>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Crowd Activities -->
+        <div class="admin-form-group admin-form-full">
+            <label class="param-label">
+                <span class="material-icons" style="font-size: 18px;">celebration</span> Aktivitas Keramaian
+            </label>
+            {% set crowd_act_options = ['Festival/event rutin', 'Live performance', 'Night tourism', 'Pasar wisata', 'Gathering', 'Wisata keluarga', 'Aktivitas komunitas', 'Street performance', 'Area nongkrong ramai', 'Aktivitas wisata alam'] %}
+            <div class="checkbox-grid">
+                {% for opt in crowd_act_options %}
+                <label class="checkbox-item">
+                    <input type="checkbox" name="crowd_activities" value="{{ opt }}"
+                           {% if editing and destination %}data-check="{{ opt }}" class="crowd-act-cb"{% endif %}>
+                    <span class="checkbox-label">{{ opt }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Crowd Facilities -->
+        <div class="admin-form-group admin-form-full">
+            <label class="param-label">
+                <span class="material-icons" style="font-size: 18px;">business</span> Fasilitas Crowd
+            </label>
+            {% set crowd_fac_options = ['Area pedestrian', 'Plaza', 'Tempat duduk umum', 'Area nongkrong', 'Area pertunjukan', 'Area kuliner besar', 'Area foto populer', 'Street performance zone', 'Area hiburan', 'Area komunitas'] %}
+            <div class="checkbox-grid">
+                {% for opt in crowd_fac_options %}
+                <label class="checkbox-item">
+                    <input type="checkbox" name="crowd_facilities" value="{{ opt }}"
+                           {% if editing and destination %}data-check="{{ opt }}" class="crowd-fac-cb"{% endif %}>
+                    <span class="checkbox-label">{{ opt }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 4: Parameter Culinary -->
+    <div class="admin-form-section">
+        <div class="admin-form-section-header">
+            <div class="admin-form-section-icon" style="background: linear-gradient(135deg, #EF4444, #F97316);">
+                <span class="material-icons">restaurant</span>
+            </div>
+            <div>
+                <h3>Parameter: Culinary</h3>
+                <p>Aspek kuliner dan makanan di destinasi</p>
+            </div>
+        </div>
+
+        <!-- Culinary Facilities -->
+        <div class="admin-form-group admin-form-full">
+            <label class="param-label">
+                <span class="material-icons" style="font-size: 18px;">storefront</span> Fasilitas Kuliner
+            </label>
+            {% set cul_fac_options = ['Restoran', 'Warung makan', 'Street food', 'Cafe', 'Food court', 'Pusat oleh-oleh', 'Kuliner khas daerah', 'Area makan outdoor', 'Pasar kuliner', 'Night culinary area'] %}
+            <div class="checkbox-grid">
+                {% for opt in cul_fac_options %}
+                <label class="checkbox-item">
+                    <input type="checkbox" name="culinary_facilities" value="{{ opt }}"
+                           {% if editing and destination %}data-check="{{ opt }}" class="cul-fac-cb"{% endif %}>
+                    <span class="checkbox-label">{{ opt }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Culinary Activities -->
+        <div class="admin-form-group admin-form-full">
+            <label class="param-label">
+                <span class="material-icons" style="font-size: 18px;">lunch_dining</span> Aktivitas Kuliner
+            </label>
+            {% set cul_act_options = ['Food hunting', 'Wisata makanan khas', 'Kuliner malam', 'Cafe hopping', 'Festival kuliner', 'Cooking experience', 'Street food exploration', 'Wisata oleh-oleh', 'Culinary tour', 'Traditional food tasting'] %}
+            <div class="checkbox-grid">
+                {% for opt in cul_act_options %}
+                <label class="checkbox-item">
+                    <input type="checkbox" name="culinary_activities" value="{{ opt }}"
+                           {% if editing and destination %}data-check="{{ opt }}" class="cul-act-cb"{% endif %}>
+                    <span class="checkbox-label">{{ opt }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Culinary Types -->
+        <div class="admin-form-group admin-form-full">
+            <label class="param-label">
+                <span class="material-icons" style="font-size: 18px;">dining</span> Jenis Kuliner
+            </label>
+            {% set cul_type_options = ['Makanan tradisional', 'Minuman khas', 'Street food khas', 'Dessert lokal', 'Seafood lokal', 'Makanan modern lokal', 'Oleh-oleh khas', 'Kuliner legendaris', 'Kuliner halal khas', 'Fusion local speciality'] %}
+            <div class="checkbox-grid">
+                {% for opt in cul_type_options %}
+                <label class="checkbox-item">
+                    <input type="checkbox" name="culinary_types" value="{{ opt }}"
+                           {% if editing and destination %}data-check="{{ opt }}" class="cul-type-cb"{% endif %}>
+                    <span class="checkbox-label">{{ opt }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 5: Parameter Culture -->
+    <div class="admin-form-section">
+        <div class="admin-form-section-header">
+            <div class="admin-form-section-icon" style="background: linear-gradient(135deg, #6366F1, #8B5CF6);">
+                <span class="material-icons">account_balance</span>
+            </div>
+            <div>
+                <h3>Parameter: Culture</h3>
+                <p>Aspek budaya dan heritage destinasi</p>
+            </div>
+        </div>
+
+        <!-- Culture Heritage -->
+        <div class="admin-form-group admin-form-full">
+            <label class="param-label">
+                <span class="material-icons" style="font-size: 18px;">museum</span> Elemen Heritage
+            </label>
+            {% set cult_heritage_options = ['Situs sejarah', 'Bangunan tradisional', 'Museum', 'Candi', 'Keraton', 'Monumen budaya', 'Kawasan heritage', 'Arsitektur tradisional', 'Artefak budaya', 'Landmark historis'] %}
+            <div class="checkbox-grid">
+                {% for opt in cult_heritage_options %}
+                <label class="checkbox-item">
+                    <input type="checkbox" name="culture_heritage" value="{{ opt }}"
+                           {% if editing and destination %}data-check="{{ opt }}" class="cult-her-cb"{% endif %}>
+                    <span class="checkbox-label">{{ opt }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Culture Activities -->
+        <div class="admin-form-group admin-form-full">
+            <label class="param-label">
+                <span class="material-icons" style="font-size: 18px;">festival</span> Aktivitas Budaya
+            </label>
+            {% set cult_act_options = ['Tari tradisional', 'Musik tradisional', 'Festival budaya', 'Ritual adat', 'Workshop kerajinan', 'Pameran budaya', 'Wisata edukasi sejarah', 'Atraksi tradisional', 'Pertunjukan budaya', 'Upacara adat'] %}
+            <div class="checkbox-grid">
+                {% for opt in cult_act_options %}
+                <label class="checkbox-item">
+                    <input type="checkbox" name="culture_activities" value="{{ opt }}"
+                           {% if editing and destination %}data-check="{{ opt }}" class="cult-act-cb"{% endif %}>
+                    <span class="checkbox-label">{{ opt }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Culture Elements -->
+        <div class="admin-form-group admin-form-full">
+            <label class="param-label">
+                <span class="material-icons" style="font-size: 18px;">auto_stories</span> Elemen Budaya
+            </label>
+            {% set cult_elem_options = ['Sejarah', 'Arsitektur tradisional', 'Seni pertunjukan', 'Kuliner tradisional', 'Kerajinan lokal', 'Tradisi adat', 'Pakaian adat', 'Nilai filosofi lokal', 'Bahasa/dialek lokal', 'Simbol budaya khas'] %}
+            <div class="checkbox-grid">
+                {% for opt in cult_elem_options %}
+                <label class="checkbox-item">
+                    <input type="checkbox" name="culture_elements" value="{{ opt }}"
+                           {% if editing and destination %}data-check="{{ opt }}" class="cult-elem-cb"{% endif %}>
+                    <span class="checkbox-label">{{ opt }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 6: Parameter Effort -->
+    <div class="admin-form-section">
+        <div class="admin-form-section-header">
+            <div class="admin-form-section-icon" style="background: linear-gradient(135deg, #06B6D4, #0284C7);">
+                <span class="material-icons">directions_walk</span>
+            </div>
+            <div>
+                <h3>Parameter: Effort</h3>
+                <p>Tingkat usaha dan aksesibilitas destinasi</p>
+            </div>
+        </div>
+
+        <!-- Effort Accessibility -->
+        <div class="admin-form-group admin-form-full">
+            <label class="param-label">
+                <span class="material-icons" style="font-size: 18px;">accessible</span> Aksesibilitas
+            </label>
+            {% set eff_acc_options = ['Jalan beraspal baik', 'Dapat dilalui kendaraan roda 4', 'Dapat diakses bus', 'Tidak memerlukan kendaraan khusus', 'Memiliki petunjuk arah jelas', 'Dekat jalan utama', 'Akses tersedia sepanjang tahun', 'Tidak memiliki tanjakan ekstrem', 'Tidak memiliki medan berbahaya'] %}
+            <div class="checkbox-grid">
+                {% for opt in eff_acc_options %}
+                <label class="checkbox-item">
+                    <input type="checkbox" name="effort_accessibility" value="{{ opt }}"
+                           {% if editing and destination %}data-check="{{ opt }}" class="eff-acc-cb"{% endif %}>
+                    <span class="checkbox-label">{{ opt }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Effort Effort -->
+        <div class="admin-form-group admin-form-full">
+            <label class="param-label">
+                <span class="material-icons" style="font-size: 18px;">fitness_center</span> Usaha
+            </label>
+            {% set eff_eff_options = ['Perjalanan > 1 jam', 'Memerlukan trekking', 'Memerlukan pendakian', 'Medan tidak rata', 'Jalan sempit', 'Harus berjalan kaki jauh', 'Memerlukan kendaraan khusus', 'Akses terbatas cuaca', 'Memerlukan stamina fisik', 'Memerlukan guide/operator'] %}
+            <div class="checkbox-grid">
+                {% for opt in eff_eff_options %}
+                <label class="checkbox-item">
+                    <input type="checkbox" name="effort_effort" value="{{ opt }}"
+                           {% if editing and destination %}data-check="{{ opt }}" class="eff-eff-cb"{% endif %}>
+                    <span class="checkbox-label">{{ opt }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Effort Mobility -->
+        <div class="admin-form-group admin-form-full">
+            <label class="param-label">
+                <span class="material-icons" style="font-size: 18px;">commute</span> Fasilitas Mobilitas
+            </label>
+            {% set eff_mob_options = ['Area parkir', 'Transportasi umum', 'Transportasi online', 'Shuttle wisata', 'Jalur pedestrian', 'Rest area', 'Toilet umum', 'Pos informasi', 'Petunjuk arah', 'Tempat istirahat'] %}
+            <div class="checkbox-grid">
+                {% for opt in eff_mob_options %}
+                <label class="checkbox-item">
+                    <input type="checkbox" name="effort_mobility" value="{{ opt }}"
+                           {% if editing and destination %}data-check="{{ opt }}" class="eff-mob-cb"{% endif %}>
+                    <span class="checkbox-label">{{ opt }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="admin-form-actions">
+        <a href="{{ url_for('admin.index') }}" class="btn admin-form-cancel">
+            <span class="material-icons" style="font-size: 18px;">arrow_back</span> Kembali
+        </a>
+        <button type="submit" class="btn btn-primary admin-form-submit">
+            <span class="material-icons" style="font-size: 18px;">save</span>
+            {{ 'Simpan Perubahan' if editing else 'Tambah Destinasi' }}
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+{% if editing and destination %}
+<script>
+    // Pre-populate checkboxes for edit mode
+    (function() {
+        function safeParse(raw) {
+            try {
+                var parsed = (typeof raw === 'string') ? JSON.parse(raw) : raw;
+                return Array.isArray(parsed) ? parsed : [];
+            } catch(e) { return []; }
+        }
+        const fieldMap = {
+            'nature-act-cb': safeParse('{{ destination.nature_activities|default("[]", true) }}'),
+            'nature-elem-cb': safeParse('{{ destination.nature_elements|default("[]", true) }}'),
+            'crowd-act-cb': safeParse('{{ destination.crowd_activities|default("[]", true) }}'),
+            'crowd-fac-cb': safeParse('{{ destination.crowd_facilities|default("[]", true) }}'),
+            'cul-fac-cb': safeParse('{{ destination.culinary_facilities|default("[]", true) }}'),
+            'cul-act-cb': safeParse('{{ destination.culinary_activities|default("[]", true) }}'),
+            'cul-type-cb': safeParse('{{ destination.culinary_types|default("[]", true) }}'),
+            'cult-her-cb': safeParse('{{ destination.culture_heritage|default("[]", true) }}'),
+            'cult-act-cb': safeParse('{{ destination.culture_activities|default("[]", true) }}'),
+            'cult-elem-cb': safeParse('{{ destination.culture_elements|default("[]", true) }}'),
+            'eff-acc-cb': safeParse('{{ destination.effort_accessibility|default("[]", true) }}'),
+            'eff-eff-cb': safeParse('{{ destination.effort_effort|default("[]", true) }}'),
+            'eff-mob-cb': safeParse('{{ destination.effort_mobility|default("[]", true) }}')
+        };
+        for (const [cls, values] of Object.entries(fieldMap)) {
+            document.querySelectorAll('.' + cls).forEach(cb => {
+                if (values.includes(cb.getAttribute('data-check'))) {
+                    cb.checked = true;
+                }
+            });
+        }
+    })();
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,158 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Dashboard Admin{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="admin-stats-grid">
+    <div class="admin-stat-card">
+        <div class="admin-stat-icon" style="background: linear-gradient(135deg, #0D9488, #10B981);">
+            <span class="material-icons">place</span>
+        </div>
+        <div class="admin-stat-info">
+            <span class="admin-stat-number">{{ total_destinations }}</span>
+            <span class="admin-stat-label">Total Destinasi</span>
+        </div>
+    </div>
+    <div class="admin-stat-card">
+        <div class="admin-stat-icon" style="background: linear-gradient(135deg, #6366F1, #8B5CF6);">
+            <span class="material-icons">category</span>
+        </div>
+        <div class="admin-stat-info">
+            <span class="admin-stat-number">{{ total_categories }}</span>
+            <span class="admin-stat-label">Kategori</span>
+        </div>
+    </div>
+    <div class="admin-stat-card">
+        <div class="admin-stat-icon" style="background: linear-gradient(135deg, #F97316, #F59E0B);">
+            <span class="material-icons">people</span>
+        </div>
+        <div class="admin-stat-info">
+            <span class="admin-stat-number">{{ total_users }}</span>
+            <span class="admin-stat-label">User Terdaftar</span>
+        </div>
+    </div>
+    <div class="admin-stat-card">
+        <div class="admin-stat-icon" style="background: linear-gradient(135deg, #EC4899, #F43F5E);">
+            <span class="material-icons">assessment</span>
+        </div>
+        <div class="admin-stat-info">
+            <span class="admin-stat-number">5</span>
+            <span class="admin-stat-label">Parameter Scoring</span>
+        </div>
+    </div>
+</div>
+
+<!-- Destinations Table -->
+<div class="admin-table-card">
+    <div class="admin-table-header">
+        <div class="admin-table-title">
+            <span class="material-icons" style="color: var(--color-primary);">map</span>
+            <h2>Kelola Destinasi Wisata</h2>
+        </div>
+        <div class="admin-table-actions">
+            <div class="admin-search-wrapper">
+                <span class="material-icons">search</span>
+                <input type="text" id="admin-search" placeholder="Cari destinasi..." class="admin-search-input">
+            </div>
+            <a href="{{ url_for('admin.add_destination') }}" class="btn btn-primary admin-add-btn" id="btn-add-destination">
+                <span class="material-icons">add</span>
+                Tambah Destinasi
+            </a>
+        </div>
+    </div>
+
+    <div class="admin-table-wrapper">
+        <table class="admin-table" id="admin-destinations-table">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">#</th>
+                    <th style="width: 70px;">Foto</th>
+                    <th>Nama Destinasi</th>
+                    <th>Kategori</th>
+                    <th>Rating</th>
+                    <th>Harga</th>
+                    <th>Koordinat</th>
+                    <th style="width: 120px;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dest in destinations %}
+                <tr class="admin-table-row" data-name="{{ dest.name|lower }}">
+                    <td class="td-num">{{ loop.index }}</td>
+                    <td>
+                        <div class="admin-table-thumb">
+                            <img src="{{ dest.photo_url }}" alt="{{ dest.name }}" loading="lazy"
+                                 onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2240%22><rect fill=%22%23E2E8F0%22 width=%2260%22 height=%2240%22/><text x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%2394A3B8%22 font-family=%22sans-serif%22 font-size=%228%22>No Img</text></svg>'">
+                        </div>
+                    </td>
+                    <td class="td-name">
+                        <span class="dest-name-text">{{ dest.name }}</span>
+                    </td>
+                    <td>
+                        <span class="admin-badge admin-badge-{{ dest.category|lower }}">{{ dest.category }}</span>
+                    </td>
+                    <td>
+                        <div class="admin-rating">
+                            <span class="material-icons" style="font-size: 16px; color: #F59E0B;">star</span>
+                            {{ dest.rating }}
+                        </div>
+                    </td>
+                    <td class="td-price">
+                        {% if dest.price == 0 %}
+                            <span class="admin-free-badge">Gratis</span>
+                        {% else %}
+                            Rp {{ "{:,.0f}".format(dest.price).replace(",", ".") }}
+                        {% endif %}
+                    </td>
+                    <td class="td-coords">
+                        <span class="coords-text">{{ "%.4f"|format(dest.latitude) }}, {{ "%.4f"|format(dest.longitude) }}</span>
+                    </td>
+                    <td>
+                        <div class="admin-action-btns">
+                            <a href="{{ url_for('admin.edit_destination', dest_id=dest.id) }}" class="admin-action-btn edit" title="Edit">
+                                <span class="material-icons">edit</span>
+                            </a>
+                            <button class="admin-action-btn delete" title="Hapus" onclick="confirmDelete({{ dest.id }}, '{{ dest.name }}')">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if not destinations %}
+    <div class="admin-empty-state">
+        <span class="material-icons">landscape</span>
+        <h3>Belum ada destinasi</h3>
+        <p>Mulai tambahkan destinasi wisata pertama Anda.</p>
+        <a href="{{ url_for('admin.add_destination') }}" class="btn btn-primary">
+            <span class="material-icons">add</span> Tambah Destinasi
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="admin-modal-overlay" id="delete-modal" style="display:none;">
+    <div class="admin-modal">
+        <div class="admin-modal-icon">
+            <span class="material-icons">warning</span>
+        </div>
+        <h3>Hapus Destinasi</h3>
+        <p>Apakah Anda yakin ingin menghapus <strong id="delete-dest-name"></strong>? Tindakan ini tidak dapat dibatalkan.</p>
+        <div class="admin-modal-actions">
+            <button class="btn admin-modal-cancel" onclick="closeDeleteModal()">Batal</button>
+            <form id="delete-form" method="POST" style="display:inline;">
+                <button type="submit" class="btn btn-danger">
+                    <span class="material-icons" style="font-size: 18px;">delete</span> Hapus
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block navbar_class %}solid{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-card-header">
+            <div class="brand-icon-lg"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Jogja Smart Guide" class="brand-logo-img-lg"></div>
+            <h1>Selamat Datang</h1>
+            <p>Masuk ke akun Anda untuk pengalaman wisata yang dipersonalisasi</p>
+        </div>
+
+        <form action="{{ url_for('auth.login') }}" method="POST" id="login-form" novalidate>
+            <div class="form-group">
+                <label for="email" class="form-label">Email</label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    class="form-input"
+                    placeholder="contoh@email.com"
+                    required
+                    autocomplete="email"
+                >
+                <div class="form-error" id="email-error">Masukkan alamat email yang valid</div>
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <div class="password-wrapper">
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        class="form-input"
+                        placeholder="Masukkan password"
+                        required
+                        autocomplete="current-password"
+                    >
+                    <button type="button" class="password-toggle" id="toggle-password" aria-label="Toggle password visibility">
+                        <span class="material-icons">visibility</span>
+                    </button>
+                </div>
+                <div class="form-error" id="password-error">Password harus diisi</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg btn-block" id="btn-login">
+                Masuk
+            </button>
+        </form>
+
+        <div class="auth-link">
+            Tidak punya akun? <a href="{{ url_for('auth.register') }}" id="link-register">Daftar di sini</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+{% endblock %}

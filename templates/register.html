@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Register{% endblock %}
+
+{% block navbar_class %}solid{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-card-header">
+            <div class="brand-icon-lg"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Jogja Smart Guide" class="brand-logo-img-lg"></div>
+            <h1>Buat Akun Baru</h1>
+            <p>Daftar untuk mendapatkan rekomendasi wisata yang dipersonalisasi</p>
+        </div>
+
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step-item active" id="indicator-1">
+                <span class="step-num">1</span>
+                <span class="step-label">Akun</span>
+            </div>
+            <div class="step-divider"></div>
+            <div class="step-item" id="indicator-2">
+                <span class="step-num">2</span>
+                <span class="step-label">Preferensi</span>
+            </div>
+        </div>
+
+        <form action="{{ url_for('auth.register') }}" method="POST" id="register-form" novalidate>
+            <!-- Step 1: Informasi Akun -->
+            <div class="form-step active" id="step-1">
+                <div class="form-group">
+                    <label for="username" class="form-label">Username</label>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        class="form-input"
+                        placeholder="Masukkan username"
+                        required
+                        autocomplete="username"
+                    >
+                    <div class="form-error" id="username-error">Username harus diisi</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        class="form-input"
+                        placeholder="contoh@email.com"
+                        required
+                        autocomplete="email"
+                    >
+                    <div class="form-error" id="email-error">Masukkan alamat email yang valid</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="password-wrapper">
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            class="form-input"
+                            placeholder="Minimal 6 karakter"
+                            required
+                            minlength="6"
+                            autocomplete="new-password"
+                        >
+                        <button type="button" class="password-toggle" id="toggle-password" aria-label="Toggle password visibility">
+                            <span class="material-icons">visibility</span>
+                        </button>
+                    </div>
+                    <div class="form-error" id="password-error">Password minimal 6 karakter</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password" class="form-label">Konfirmasi Password</label>
+                    <div class="password-wrapper">
+                        <input
+                            type="password"
+                            id="confirm_password"
+                            name="confirm_password"
+                            class="form-input"
+                            placeholder="Ulangi password"
+                            required
+                            autocomplete="new-password"
+                        >
+                        <button type="button" class="password-toggle" id="toggle-confirm-password" aria-label="Toggle password visibility">
+                            <span class="material-icons">visibility</span>
+                        </button>
+                    </div>
+                    <div class="form-error" id="confirm-password-error">Password tidak cocok</div>
+                </div>
+
+                <button type="button" class="btn btn-primary btn-lg btn-block" id="btn-next-step" style="margin-top: var(--space-4); display: flex; align-items: center; justify-content: center; gap: var(--space-2);">
+                    Lanjut Ke Preferensi <span class="material-icons">arrow_forward</span>
+                </button>
+            </div>
+
+            <!-- Step 2: Preferensi Wisata -->
+            <div class="form-step" id="step-2" style="display: none;">
+                <h3 class="auth-section-title">
+                    <span class="material-icons" style="color: var(--color-primary);">track_changes</span> Parameter Preferensi
+                </h3>
+                <p class="auth-section-desc">Atur tingkat ketertarikan Anda untuk mendapatkan rekomendasi tempat wisata yang dipersonalisasi.</p>
+
+                <!-- Nature Slider -->
+                <div class="form-group slider-group">
+                    <div class="slider-header">
+                        <label for="pref_nature" class="form-label slider-label-with-icon">
+                            <span class="material-icons">nature</span> Nature (Alam)
+                        </label>
+                        <span class="slider-value-badge" id="val-pref-nature">Netral / Biasa Saja</span>
+                    </div>
+                    <input type="range" id="pref_nature" name="pref_nature" class="form-slider" min="1" max="5" value="3">
+                    <p class="slider-help">Minat terhadap keindahan alam pegunungan, hutan, gua, dan luar ruangan.</p>
+                </div>
+
+                <!-- Culture Slider -->
+                <div class="form-group slider-group">
+                    <div class="slider-header">
+                        <label for="pref_culture" class="form-label slider-label-with-icon">
+                            <span class="material-icons">account_balance</span> Culture (Budaya & Sejarah)
+                        </label>
+                        <span class="slider-value-badge" id="val-pref-culture">Netral / Biasa Saja</span>
+                    </div>
+                    <input type="range" id="pref_culture" name="pref_culture" class="form-slider" min="1" max="5" value="3">
+                    <p class="slider-help">Ketertarikan pada peninggalan sejarah, candi, museum, kesenian, dan adat lokal.</p>
+                </div>
+
+                <!-- Culinary Slider -->
+                <div class="form-group slider-group">
+                    <div class="slider-header">
+                        <label for="pref_culinary" class="form-label slider-label-with-icon">
+                            <span class="material-icons">restaurant</span> Culinary (Kuliner)
+                        </label>
+                        <span class="slider-value-badge" id="val-pref-culinary">Netral / Biasa Saja</span>
+                    </div>
+                    <input type="range" id="pref_culinary" name="pref_culinary" class="form-slider" min="1" max="5" value="3">
+                    <p class="slider-help">Minat untuk berburu kuliner tradisional Jogja, jajanan khas, dan tempat makan unik.</p>
+                </div>
+
+                <!-- Crowd Slider -->
+                <div class="form-group slider-group">
+                    <div class="slider-header">
+                        <label for="pref_crowd" class="form-label slider-label-with-icon">
+                            <span class="material-icons">groups</span> Crowd (Keramaian)
+                        </label>
+                        <span class="slider-value-badge" id="val-pref-crowd">Netral / Tidak Masalah</span>
+                    </div>
+                    <input type="range" id="pref_crowd" name="pref_crowd" class="form-slider" min="1" max="5" value="3">
+                    <p class="slider-help">Tingkat kenyamanan Anda di tempat yang sangat ramai, sibuk, atau padat pengunjung.</p>
+                </div>
+
+                <!-- Effort Slider -->
+                <div class="form-group slider-group">
+                    <div class="slider-header">
+                        <label for="pref_effort" class="form-label slider-label-with-icon">
+                            <span class="material-icons">directions_run</span> Effort (Usaha Fisik)
+                        </label>
+                        <span class="slider-value-badge" id="val-pref-effort">Sedang (Jalan Kaki Normal)</span>
+                    </div>
+                    <input type="range" id="pref_effort" name="pref_effort" class="form-slider" min="1" max="5" value="3">
+                    <p class="slider-help">Seberapa besar aktivitas fisik yang Anda inginkan (mendaki, berjalan jauh, menanjak).</p>
+                </div>
+
+                <div class="step-buttons" style="display: flex; gap: var(--space-3); margin-top: var(--space-6);">
+                    <button type="button" class="btn btn-secondary btn-lg" id="btn-back-step" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: var(--space-2);">
+                        <span class="material-icons">arrow_back</span> Kembali
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-lg" id="btn-submit-register" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: var(--space-2);">
+                        Daftar Akun Baru <span class="material-icons">how_to_reg</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div class="auth-link">
+            Sudah punya akun? <a href="{{ url_for('auth.login') }}" id="link-login">Login di sini</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+{% endblock %}
