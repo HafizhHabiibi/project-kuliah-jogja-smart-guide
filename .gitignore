@@ -1,0 +1,23 @@
+# Python compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+env/
+venv/
+ENV/
+
+# Flask Instance folder (contains SQLite DB)
+instance/
+
+# Local configuration/secrets
+.env
+
+# IDEs/Editor configurations
+.vscode/
+.idea/
+
+# Temp inspection files
+scratch/goers_temp.html

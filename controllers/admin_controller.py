@@ -79,7 +79,38 @@ def delete_destination(dest_id):
     return redirect(url_for('admin.index'))
 
 
+@admin_bp.route('/admin/api/scrape-price')
+@admin_required
+def scrape_price():
+    """Trigger price scraper for a given destination name query."""
+    name = request.args.get('name', '').strip()
+    if not name:
+        return {'success': False, 'message': 'Nama tempat wisata tidak boleh kosong.'}, 400
+        
+    try:
+        from services.price_scraper_service import find_scraper_by_name
+        scraper_func = find_scraper_by_name(name)
+        price, source = scraper_func()
+        if price is not None:
+            return {
+                'success': True,
+                'price': price,
+                'source': source
+            }
+        else:
+            return {
+                'success': False,
+                'message': 'Harga tiket masuk tidak ditemukan secara otomatis.'
+            }
+    except Exception as e:
+        return {
+            'success': False,
+            'message': f'Error scraping: {str(e)}'
+        }
+
+
 def _save_destination(destination):
+
     """Save (create or update) a destination from form data."""
     # Basic info
     name = request.form.get('name', '').strip()
@@ -173,6 +204,9 @@ def _save_destination(destination):
     destination.effort_accessibility = get_multi('effort_accessibility')
     destination.effort_effort = get_multi('effort_effort')
     destination.effort_mobility = get_multi('effort_mobility')
+
+    # Calculate MCDM scores automatically
+    destination.update_dna_scores()
 
     db.session.commit()
 

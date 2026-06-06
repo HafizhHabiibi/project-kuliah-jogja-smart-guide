@@ -1,0 +1,164 @@
+
+1. Variabel Input dan Fungsi Keanggotaan
+A. Input 1: Cosine Similarity Preferensi User (Semesta Pembicaraan: -1 s/d 1)
+
+B. Input 2: Kondisi Cuaca Lokasi Wisata / Output FIS 1 (Semesta Pembicaraan: 0 s/d 1)
+
+C. Input 3: Harga Tiket Masuk + Parkir (Semesta Pembicaraan: Rp 0 s/d Rp 150.000)
+
+D. Input 4: Jarak Koordinat User / Haversine (Semesta Pembicaraan: 0 s/d 100 km)
+
+2. Variabel Output (Skor Rekomendasi Akhir)
+Skor Rekomendasi ($SR$) (Semesta Pembicaraan: 0 s/d 100)
+
+ATURAN FIS TAHAP 2:Dalam metode Mamdani, penentuan output bergerak secara kontinu berdasarkan pembobotan semua aspek. Untuk menghindari penulisan 108 baris yang sangat redundan di skripsi, kita menerapkan Rule Pruning & Aggregation berbasis prinsip logika pariwisata (Domain Knowledge):
+Prinsip Personalisasi (Minat Utama): Jika preferensi Tidak Cocok, maka skor rekomendasi otomatis jatuh ke tingkat terendah, karena sistem ini mengutamakan kepuasan personal wisatawan (User-Centric).
+Prinsip Keselamatan (Safety First): Jika cuaca Buruk, maka tempat wisata luar ruangan/alam tidak boleh mendapatkan rekomendasi tinggi demi keselamatan.
+
+No
+Cosine Similarity
+Kondisi Cuaca
+Harga Tiket
+Jarak Geografis
+Output (Skor Rekomendasi)
+Logika Kontekstual & Dampak Wisatawan
+1
+Tidak Cocok
+Any (Semua)
+Any (Semua)
+Any (Semua)
+Sangat Tidak Direkomendasikan (STD)
+Karakteristik destinasi bertolak belakang dengan DNA wisata user. Faktor cuaca/harga tidak mampu menolong keputusan. (Mewakili 27 aturan redundan).
+2
+Cukup Cocok
+Buruk
+Any (Semua)
+Any (Semua)
+Sangat Tidak Direkomendasikan (STD)
+Minat rendah dipadukan dengan cuaca buruk/ekstrem menciptakan risiko keselamatan tinggi dan ketidakpuasan total.
+3
+Cocok
+Buruk
+Mahal
+Jauh
+Sangat Tidak Direkomendasikan (STD)
+Sudah cuacanya buruk, harganya mahal, dan lokasinya sangat jauh dari posisi user saat ini.
+4
+Cocok
+Buruk
+Terjangkau
+Sedang
+Tidak Direkomendasikan (TD)
+Meskipun harga dan jarak masuk akal, faktor cuaca buruk merusak pengalaman perjalanan.
+5
+Sangat Cocok
+Buruk
+Gratis/Murah
+Dekat
+Tidak Direkomendasikan (TD)
+Walaupun tempat sangat diminati, gratis, dan dekat, objek wisata tetap tidak aman dikunjungi akibat cuaca buruk.
+6
+Cukup Cocok
+Cukup
+Mahal
+Jauh
+Tidak Direkomendasikan (TD)
+Kecocokan rendah, cuaca biasa saja, ditambah hambatan finansial dan jarak tempuh yang melelahkan.
+7
+Cukup Cocok
+Cukup
+Terjangkau
+Sedang
+Cukup Direkomendasikan (CD)
+Kondisi moderat rata-tengah. Destinasi alternatif jika pilihan utama tidak memungkinkan.
+8
+Cukup Cocok
+Baik
+Gratis/Murah
+Dekat
+Cukup Direkomendasikan (CD)
+Ketertarikan user biasa saja, tetapi kondisi lapangan sangat mendukung (cerah, murah, dan dekat).
+9
+Cocok
+Cukup
+Mahal
+Jauh
+Tidak Direkomendasikan (TD)
+Destinasi disukai, namun harga tiket mahal dan letaknya terlalu jauh untuk kondisi cuaca yang hanya pas-pasan.
+10
+Cocok
+Cukup
+Terjangkau
+Sedang
+Cukup Direkomendasikan (CD)
+Nilai kecocokan, harga, dan jarak berada di ambang batas toleransi kenyamanan wisatawan.
+11
+Cocok
+Cukup
+Gratis/Murah
+Dekat
+Direkomendasikan (D)
+Wisata sesuai minat, biaya sangat hemat, dekat, walaupun kondisi cuaca sedikit mendung atau gerimis.
+12
+Cocok
+Baik
+Mahal
+Jauh
+Cukup Direkomendasikan (CD)
+Skenario wisata premium: Wisatawan sangat berminat dan cuaca cerah, namun harus mengorbankan biaya tinggi dan perjalanan jauh.
+13
+Cocok
+Baik
+Terjangkau
+Sedang
+Direkomendasikan (D)
+Rekomendasi standar yang aman bagi wisatawan umum di Yogyakarta.
+14
+Cocok
+Baik
+Gratis/Murah
+Dekat
+Sangat Direkomendasikan (SD)
+Tingkat kecocokan tinggi didukung oleh ekosistem lapangan yang serba sempurna dan efisien.
+15
+Sangat Cocok
+Cukup
+Mahal
+Jauh
+Cukup Direkomendasikan (CD)
+Tempat impian wisatawan, namun realitas jarak dan harga memangkas nilai kelayakan rekomendasi akhir.
+16
+Sangat Cocok
+Cukup
+Terjangkau
+Sedang
+Direkomendasikan (D)
+Preferensi mutlak pengguna mampu menutupi kekurangan kondisi cuaca yang sedang mendung/normal.
+17
+Sangat Cocok
+Cukup
+Gratis/Murah
+Dekat
+Sangat Direkomendasikan (SD)
+Sangat hemat dan dekat dengan lokasi user, serta sangat sesuai dengan personalisasi DNA wisatanya.
+18
+Sangat Cocok
+Baik
+Mahal
+Jauh
+Direkomendasikan (D)
+Destinasi yang sangat dinantikan dan cuaca sangat mendukung. Jarak dan harga tidak menjadi masalah besar bagi user.
+19
+Sangat Cocok
+Baik
+Terjangkau
+Sedang
+Sangat Direkomendasikan (SD)
+Nilai ideal untuk pariwisata: Preferensi klop, cuaca cerah, harga masuk akal, jarak tempuh tidak terlalu melelahkan.
+20
+Sangat Cocok
+Baik
+Gratis/Murah
+Dekat
+Sangat Direkomendasikan (SD)
+Kondisi Absolut Sempurna. Destinasi utama yang wajib disarankan sistem pada urutan peringkat pertama (Rank 1).

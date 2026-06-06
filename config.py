@@ -9,5 +9,7 @@ class Config:
         'sqlite:///' + os.path.join(basedir, 'instance', 'jogja_smart_guide.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # OpenWeatherMap API Key — ganti dengan API key milikmu
-    OPENWEATHERMAP_API_KEY = os.environ.get('OPENWEATHERMAP_API_KEY') or 'YOUR_API_KEY_HERE'
+    OPENWEATHERMAP_API_KEY = os.environ.get('OPENWEATHERMAP_API_KEY') or 'your_openweathermap_api_key_here'
+    SCRAPER_API_KEY = os.environ.get('SCRAPER_API_KEY') or None
+
+
