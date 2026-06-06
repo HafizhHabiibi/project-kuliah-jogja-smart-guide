@@ -1,7 +1,11 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 from flask import Flask
 from flask_login import LoginManager
 from config import Config
+
 from models import db
 from models.user import User
 from models.destination import Destination, seed_destinations
