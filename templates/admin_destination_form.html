@@ -48,12 +48,48 @@
 
             <!-- Name -->
             <div class="admin-form-group admin-form-full">
+                <style>
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                    .btn-scrape:hover {
+                        transform: translateY(-1px);
+                        box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.3);
+                        filter: brightness(1.05);
+                    }
+                    .btn-scrape:active {
+                        transform: translateY(0);
+                    }
+                </style>
                 <label for="name">
                     <span class="material-icons" style="font-size: 18px;">place</span> Nama Tempat Wisata <span class="required">*</span>
                 </label>
-                <input type="text" name="name" id="name" required placeholder="Contoh: Candi Prambanan"
-                       value="{{ destination.name if editing and destination else '' }}">
+                <div style="display: flex; gap: 8px; align-items: center; width: 100%;">
+                    <input type="text" name="name" id="name" required placeholder="Contoh: Candi Prambanan"
+                           value="{{ destination.name if editing and destination else '' }}" style="flex: 1; min-width: 0;">
+                    <button type="button" id="btn-scrape-price" class="btn-scrape" style="
+                        background: linear-gradient(135deg, #0D9488, #10B981);
+                        color: white;
+                        border: none;
+                        padding: 0 16px;
+                        height: 42px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-weight: 600;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        transition: all 0.2s ease;
+                        white-space: nowrap;
+                        box-shadow: 0 2px 4px rgba(13, 148, 136, 0.15);
+                    ">
+                        <span class="material-icons" style="font-size: 18px;" id="scrape-icon">autorenew</span>
+                        <span id="scrape-text">Cari Harga Otomatis</span>
+                    </button>
+                </div>
             </div>
+
 
             <!-- Description -->
             <div class="admin-form-group admin-form-full">
@@ -99,18 +135,42 @@
                        value="{{ destination.price if editing and destination else '0' }}">
             </div>
 
-            <!-- Category -->
+            <!-- Category (Otomatis) -->
             <div class="admin-form-group">
-                <label for="category">
-                    <span class="material-icons" style="font-size: 18px;">category</span> Kategori <span class="required">*</span>
+                <label for="category-display">
+                    <span class="material-icons" style="font-size: 18px;">category</span> Kategori Otomatis <span class="required">*</span>
                 </label>
-                <select name="category" id="category" required>
-                    <option value="">Pilih Kategori</option>
-                    {% set categories = ['Sejarah', 'Alam', 'Pantai', 'Budaya', 'Belanja', 'Hiburan'] %}
-                    {% for cat in categories %}
-                        <option value="{{ cat }}" {% if editing and destination and destination.category == cat %}selected{% endif %}>{{ cat }}</option>
-                    {% endfor %}
-                </select>
+                <input type="text" id="category-display" readonly style="background-color: var(--color-bg-subtle, #f3f4f6); font-weight: bold; color: #0D9488;" value="{{ destination.category if editing and destination else 'Alam' }}">
+                <input type="hidden" name="category" id="category-hidden" value="{{ destination.category if editing and destination else 'Alam' }}">
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1.5: Live Estimasi Skor DNA & Kategori -->
+    <div class="admin-form-section" style="background: var(--color-bg-card, #ffffff); border: 1px solid var(--color-border, #e5e7eb); padding: 1.5rem; border-radius: var(--radius-lg, 12px); margin-top: 1rem;">
+        <h4 style="margin-top: 0; margin-bottom: 1rem; color: var(--color-text, #1f2937); font-size: 16px; display: flex; align-items: center; gap: 8px;">
+            <span class="material-icons" style="color: var(--color-primary, #0D9488);">analytics</span> Live Estimasi Skor DNA & Kategori
+        </h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; text-align: center;">
+            <div style="padding: 0.5rem; background: rgba(16, 185, 129, 0.08); border-radius: 8px; border: 1px dashed rgba(16, 185, 129, 0.25);">
+                <div style="font-size: 12px; color: var(--color-text-secondary, #6b7280);">Alam</div>
+                <div id="display-score-nature" style="font-size: 18px; font-weight: bold; color: #10B981;">3.00</div>
+            </div>
+            <div style="padding: 0.5rem; background: rgba(99, 102, 241, 0.08); border-radius: 8px; border: 1px dashed rgba(99, 102, 241, 0.25);">
+                <div style="font-size: 12px; color: var(--color-text-secondary, #6b7280);">Budaya</div>
+                <div id="display-score-culture" style="font-size: 18px; font-weight: bold; color: #6366F1;">3.00</div>
+            </div>
+            <div style="padding: 0.5rem; background: rgba(239, 68, 68, 0.08); border-radius: 8px; border: 1px dashed rgba(239, 68, 68, 0.25);">
+                <div style="font-size: 12px; color: var(--color-text-secondary, #6b7280);">Kuliner</div>
+                <div id="display-score-culinary" style="font-size: 18px; font-weight: bold; color: #EF4444;">3.00</div>
+            </div>
+            <div style="padding: 0.5rem; background: rgba(249, 115, 22, 0.08); border-radius: 8px; border: 1px dashed rgba(249, 115, 22, 0.25);">
+                <div style="font-size: 12px; color: var(--color-text-secondary, #6b7280);">Keramaian</div>
+                <div id="display-score-crowd" style="font-size: 18px; font-weight: bold; color: #F97316;">3.00</div>
+            </div>
+            <div style="padding: 0.5rem; background: rgba(6, 182, 212, 0.08); border-radius: 8px; border: 1px dashed rgba(6, 182, 212, 0.25);">
+                <div style="font-size: 12px; color: var(--color-text-secondary, #6b7280);">Petualangan</div>
+                <div id="display-score-effort" style="font-size: 18px; font-weight: bold; color: #06B6D4;">3.00</div>
             </div>
         </div>
     </div>
@@ -558,4 +618,149 @@
     })();
 </script>
 {% endif %}
+
+<script>
+    // Real-time MCDM DNA score & category calculator
+    function calculateCategory() {
+        function getCheckboxScore(selector, maxItems) {
+            const checkedCount = document.querySelectorAll(selector + ':checked').length;
+            return Math.max(1.0, Math.min(5.0, 1.0 + (checkedCount * 4.0 / maxItems)));
+        }
+
+        // 1. NATURE
+        const natureVisual = parseFloat(document.querySelector('input[name="nature_visual"]:checked')?.value || 3);
+        const actNature = getCheckboxScore('input[name="nature_activities"]', 6);
+        const elemNature = getCheckboxScore('input[name="nature_elements"]', 5);
+        const scoreNature = (natureVisual * 0.5) + (actNature * 0.25) + (elemNature * 0.25);
+
+        // 2. CULTURE
+        const herCulture = getCheckboxScore('input[name="culture_heritage"]', 4);
+        const actCulture = getCheckboxScore('input[name="culture_activities"]', 4);
+        const elemCulture = getCheckboxScore('input[name="culture_elements"]', 4);
+        const scoreCulture = (herCulture * 0.4) + (actCulture * 0.3) + (elemCulture * 0.3);
+
+        // 3. CULINARY
+        const facCulinary = getCheckboxScore('input[name="culinary_facilities"]', 4);
+        const actCulinary = getCheckboxScore('input[name="culinary_activities"]', 4);
+        const typeCulinary = getCheckboxScore('input[name="culinary_types"]', 4);
+        const scoreCulinary = (facCulinary * 0.4) + (actCulinary * 0.3) + (typeCulinary * 0.3);
+
+        // 4. CROWD
+        const reviewScore = parseFloat(document.querySelector('input[name="crowd_review_count"]:checked')?.value || 1);
+        const ratingScore = parseFloat(document.querySelector('input[name="crowd_rating"]:checked')?.value || 3);
+        const hashtagScore = parseFloat(document.querySelector('input[name="crowd_hashtag"]:checked')?.value || 1);
+        const actCrowd = getCheckboxScore('input[name="crowd_activities"]', 5);
+        const facCrowd = getCheckboxScore('input[name="crowd_facilities"]', 5);
+        const scoreCrowd = (reviewScore * 0.3) + (ratingScore * 0.2) + (hashtagScore * 0.2) + (actCrowd * 0.15) + (facCrowd * 0.15);
+
+        // 5. EFFORT
+        const accEffort = getCheckboxScore('input[name="effort_accessibility"]', 6);
+        const mobEffort = getCheckboxScore('input[name="effort_mobility"]', 6);
+        const diffEffort = getCheckboxScore('input[name="effort_effort"]', 5);
+        const scoreEffort = Math.max(1.0, Math.min(5.0, 3.0 + diffEffort - (accEffort * 0.5 + mobEffort * 0.5)));
+
+        const scores = {
+            'Alam': scoreNature,
+            'Budaya': scoreCulture,
+            'Kuliner': scoreCulinary,
+            'Keramaian': scoreCrowd,
+            'Petualangan': scoreEffort
+        };
+
+        // Find the category with the highest score
+        let highestCategory = 'Alam';
+        let highestScore = -1;
+        for (const [cat, score] of Object.entries(scores)) {
+            if (score > highestScore) {
+                highestScore = score;
+                highestCategory = cat;
+            }
+        }
+
+        // Update UI inputs
+        const displayField = document.getElementById('category-display');
+        const hiddenField = document.getElementById('category-hidden');
+        if (displayField) displayField.value = highestCategory;
+        if (hiddenField) hiddenField.value = highestCategory;
+
+        // Update Live Score badges
+        const docNature = document.getElementById('display-score-nature');
+        const docCulture = document.getElementById('display-score-culture');
+        const docCulinary = document.getElementById('display-score-culinary');
+        const docCrowd = document.getElementById('display-score-crowd');
+        const docEffort = document.getElementById('display-score-effort');
+        
+        if (docNature) docNature.textContent = scoreNature.toFixed(2);
+        if (docCulture) docCulture.textContent = scoreCulture.toFixed(2);
+        if (docCulinary) docCulinary.textContent = scoreCulinary.toFixed(2);
+        if (docCrowd) docCrowd.textContent = scoreCrowd.toFixed(2);
+        if (docEffort) docEffort.textContent = scoreEffort.toFixed(2);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('destination-form');
+        if (form) {
+            form.addEventListener('change', calculateCategory);
+            // Run once at start to calculate initially loaded values
+            setTimeout(calculateCategory, 100);
+        }
+
+        // Handle "Cari Harga Otomatis" button click
+        const btnScrape = document.getElementById('btn-scrape-price');
+        if (btnScrape) {
+            btnScrape.addEventListener('click', async () => {
+                const nameInput = document.getElementById('name');
+                const nameVal = nameInput ? nameInput.value.trim() : '';
+                
+                if (!nameVal) {
+                    alert('Silakan masukkan nama tempat wisata terlebih dahulu.');
+                    return;
+                }
+                
+                // Show loading state
+                const scrapeIcon = document.getElementById('scrape-icon');
+                const scrapeText = document.getElementById('scrape-text');
+                
+                btnScrape.disabled = true;
+                btnScrape.style.opacity = '0.7';
+                if (scrapeIcon) {
+                    scrapeIcon.textContent = 'autorenew'; // Keep autorenew to spin
+                    scrapeIcon.style.animation = 'spin 1.5s linear infinite';
+                }
+                if (scrapeText) scrapeText.textContent = 'Mencari Harga...';
+                
+                try {
+                    const response = await fetch(`/admin/api/scrape-price?name=${encodeURIComponent(nameVal)}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const priceInput = document.getElementById('price');
+                        if (priceInput) {
+                            priceInput.value = data.price;
+                            // Trigger change event to keep form logic intact
+                            priceInput.dispatchEvent(new Event('change'));
+                        }
+                        
+                        // Show visual feedback
+                        alert(`Berhasil menemukan harga: Rp ${data.price.toLocaleString('id-ID')} (${data.source})`);
+                    } else {
+                        alert(`Gagal: ${data.message || 'Harga tidak ditemukan.'}`);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Terjadi kesalahan saat menghubungi server untuk mencari harga.');
+                } finally {
+                    // Reset button state
+                    btnScrape.disabled = false;
+                    btnScrape.style.opacity = '1';
+                    if (scrapeIcon) {
+                        scrapeIcon.style.animation = 'none';
+                    }
+                    if (scrapeText) scrapeText.textContent = 'Cari Harga Otomatis';
+                }
+            });
+        }
+    });
+
+</script>
 {% endblock %}

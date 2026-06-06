@@ -1,10 +1,15 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 from flask import Flask
 from flask_login import LoginManager
 from config import Config
+
 from models import db
 from models.user import User
 from models.destination import Destination, seed_destinations
+from models.destination_weather import DestinationWeather
 from controllers.auth_controller import auth_bp
 from controllers.dashboard_controller import dashboard_bp
 from controllers.profile_controller import profile_bp
@@ -45,7 +50,28 @@ def create_app():
         seed_destinations()
         _seed_admin()
 
+    # Background Scheduler for Price Scraper
+    from services.price_scraper_service import scrape_all_destinations_prices
+    from apscheduler.schedulers.background import BackgroundScheduler
+    
+    if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        try:
+            scheduler = BackgroundScheduler()
+            scheduler.add_job(
+                func=lambda: scrape_all_destinations_prices(),
+                trigger='interval',
+                hours=24,
+                id='price_scraper_job',
+                replace_existing=True
+            )
+            scheduler.start()
+            print("[Scheduler] Background Scheduler started: Daily ticket price scraper active.")
+        except Exception as e:
+            print(f"[Scheduler] Failed to start background scheduler: {e}")
+
+
     return app
+
 
 
 def _seed_admin():

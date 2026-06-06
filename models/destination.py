@@ -42,6 +42,20 @@ class Destination(db.Model):
     effort_effort = db.Column(db.Text, default='[]')         # JSON array
     effort_mobility = db.Column(db.Text, default='[]')       # JSON array
 
+    # === SCRAPER HARGA ===
+    price_last_scraped = db.Column(db.DateTime, nullable=True)
+    price_scrape_status = db.Column(db.String(50), default='PENDING')
+
+    # === SKOR DNA WISATA (MCDM) ===
+    score_nature = db.Column(db.Float, default=3.0, nullable=False)
+    score_culture = db.Column(db.Float, default=3.0, nullable=False)
+    score_culinary = db.Column(db.Float, default=3.0, nullable=False)
+    score_crowd = db.Column(db.Float, default=3.0, nullable=False)
+    score_effort = db.Column(db.Float, default=3.0, nullable=False)
+
+    # === RELASI CUACA (1-to-1) ===
+    weather = db.relationship('DestinationWeather', backref='destination', uselist=False, cascade="all, delete-orphan")
+
     def _parse_json(self, field):
         """Safely parse a JSON text field to a list."""
         try:
@@ -82,10 +96,83 @@ class Destination(db.Model):
             'effort_accessibility': self._parse_json(self.effort_accessibility),
             'effort_effort': self._parse_json(self.effort_effort),
             'effort_mobility': self._parse_json(self.effort_mobility),
+            # Scraper & DNA Scores
+            'price_last_scraped': self.price_last_scraped.isoformat() if self.price_last_scraped else None,
+            'price_scrape_status': self.price_scrape_status,
+            'score_nature': self.score_nature,
+            'score_culture': self.score_culture,
+            'score_culinary': self.score_culinary,
+            'score_crowd': self.score_crowd,
+            'score_effort': self.score_effort,
+            # Cached Weather Data (Input FIS 1) and output weather_index
+            'weather': {
+                'temp': self.weather.temp if self.weather else 27.0,
+                'rain_1h': self.weather.rain_1h if self.weather else 0.0,
+                'clouds_all': self.weather.clouds_all if self.weather else 50,
+                'wind_speed': self.weather.wind_speed if self.weather else 2.0,
+                'weather_index': self.weather.weather_index if self.weather else 0.5,
+                'last_updated': self.weather.last_updated.isoformat() if self.weather and self.weather.last_updated else None
+            }
         }
 
     def __repr__(self):
         return f'<Destination {self.name}>'
+
+    def update_dna_scores(self):
+        """Menghitung skor DNA 5-Dimensi (1.0 - 5.0) berdasarkan jawaban kuesioner admin."""
+        def calculate_checkbox_score(json_data, max_items=4):
+            try:
+                items = json.loads(json_data) if json_data else []
+            except:
+                items = []
+            count = len(items)
+            return max(1.0, min(5.0, 1.0 + (count * 4.0 / max_items)))
+
+        # 1. NATURE
+        visual_score = float(self.nature_visual or 3)
+        act_nature = calculate_checkbox_score(self.nature_activities, max_items=6)
+        elem_nature = calculate_checkbox_score(self.nature_elements, max_items=5)
+        self.score_nature = round((visual_score * 0.5) + (act_nature * 0.25) + (elem_nature * 0.25), 2)
+
+        # 2. CULTURE
+        her_culture = calculate_checkbox_score(self.culture_heritage, max_items=4)
+        act_culture = calculate_checkbox_score(self.culture_activities, max_items=4)
+        elem_culture = calculate_checkbox_score(self.culture_elements, max_items=4)
+        self.score_culture = round((her_culture * 0.4) + (act_culture * 0.3) + (elem_culture * 0.3), 2)
+
+        # 3. CULINARY
+        fac_culinary = calculate_checkbox_score(self.culinary_facilities, max_items=4)
+        act_culinary = calculate_checkbox_score(self.culinary_activities, max_items=4)
+        type_culinary = calculate_checkbox_score(self.culinary_types, max_items=4)
+        self.score_culinary = round((fac_culinary * 0.4) + (act_culinary * 0.3) + (type_culinary * 0.3), 2)
+
+        # 4. CROWD
+        review_score = float(self.crowd_review_count or 1)
+        rating_score = float(self.crowd_rating or 3)
+        hashtag_score = float(self.crowd_hashtag or 1)
+        act_crowd = calculate_checkbox_score(self.crowd_activities, max_items=5)
+        fac_crowd = calculate_checkbox_score(self.crowd_facilities, max_items=5)
+        self.score_crowd = round(
+            (review_score * 0.3) + (rating_score * 0.2) + (hashtag_score * 0.2) + 
+            (act_crowd * 0.15) + (fac_crowd * 0.15), 2
+        )
+
+        # 5. EFFORT
+        acc_effort = calculate_checkbox_score(self.effort_accessibility, max_items=6)
+        mob_effort = calculate_checkbox_score(self.effort_mobility, max_items=6)
+        diff_effort = calculate_checkbox_score(self.effort_effort, max_items=5)
+        self.score_effort = round(max(1.0, min(5.0, 3.0 + diff_effort - (acc_effort * 0.5 + mob_effort * 0.5))), 2)
+
+        # 6. AUTO CATEGORIZATION
+        # Tentukan Kategori Otomatis berdasarkan skor tertinggi dari 5 dimensi DNA
+        scores = {
+            'Alam': self.score_nature,
+            'Budaya': self.score_culture,
+            'Kuliner': self.score_culinary,
+            'Keramaian': self.score_crowd,
+            'Petualangan': self.score_effort
+        }
+        self.category = max(scores, key=scores.get)
 
 
 def seed_destinations():
@@ -420,6 +507,7 @@ def seed_destinations():
     for dest in destinations:
         existing = Destination.query.filter_by(name=dest.name).first()
         if not existing:
+            dest.update_dna_scores()
             db.session.add(dest)
 
     db.session.commit()

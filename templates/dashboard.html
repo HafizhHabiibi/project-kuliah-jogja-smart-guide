@@ -4,6 +4,62 @@
 
 {% block navbar_class %}solid{% endblock %}
 
+{% block extra_css %}
+<!-- Leaflet Map CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<style>
+    #modal-route-map {
+        margin-top: var(--space-3);
+        border: 2px solid var(--color-border);
+        box-shadow: var(--shadow-sm);
+        transition: border-color var(--transition-base);
+    }
+    #modal-route-map:hover {
+        border-color: var(--color-primary-light);
+    }
+    /* Animasi spin untuk tombol refresh */
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .rotating .material-icons {
+        animation: spin 1s linear infinite;
+    }
+    
+    /* Style untuk Badge Rekomendasi & Cosine Similarity */
+    .badge-row {
+        display: flex;
+        gap: var(--space-2);
+        margin-bottom: var(--space-3);
+        flex-wrap: wrap;
+    }
+    .badge-similarity {
+        background: rgba(13, 148, 136, 0.1);
+        color: var(--color-primary);
+        font-size: 11px;
+        font-weight: 700;
+        padding: var(--space-1) var(--space-2_5);
+        border-radius: var(--radius-full);
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border: 1px solid rgba(13, 148, 136, 0.15);
+    }
+    .badge-recommendation {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        font-size: 11px;
+        font-weight: 800;
+        padding: var(--space-1) var(--space-2_5);
+        border-radius: var(--radius-full);
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        box-shadow: 0 2px 4px rgba(217, 119, 6, 0.2);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="dashboard">
     <!-- Dashboard Header -->
@@ -22,7 +78,7 @@
                     <span class="material-icons location-icon" style="color: var(--color-primary); font-size: 24px;">my_location</span>
                     <div>
                         <h4 class="weather-title" style="margin: 0; font-size: var(--text-base); font-weight: 700; color: var(--color-text);">Kondisi Cuaca Anda</h4>
-                        <p class="weather-subtitle" style="margin: 0; font-size: var(--text-xs); color: var(--color-text-secondary);">Yogyakarta, Indonesia</p>
+                        <p class="weather-subtitle" id="user-weather-location" style="margin: 0; font-size: var(--text-xs); color: var(--color-text-secondary);">Mendeteksi lokasi...</p>
                     </div>
                 </div>
                 <div class="card-badge" style="background: var(--color-primary-subtle); color: var(--color-primary); border: 1px solid rgba(13, 148, 136, 0.15); font-size: 10px; font-weight: 800; padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); letter-spacing: 0.05em; box-shadow: none;">LIVE</div>
@@ -33,7 +89,7 @@
                 <div class="weather-detail-item">
                     <span class="material-icons detail-icon" style="color: var(--color-primary);">thermostat</span>
                     <div>
-                        <span class="detail-val">29.5°C</span>
+                        <span class="detail-val" id="user-weather-temp">-°C</span>
                         <span class="detail-lbl">Suhu</span>
                     </div>
                 </div>
@@ -41,7 +97,7 @@
                 <div class="weather-detail-item">
                     <span class="material-icons detail-icon" style="color: var(--color-primary);">water_drop</span>
                     <div>
-                        <span class="detail-val">0.0 mm</span>
+                        <span class="detail-val" id="user-weather-rain">- mm</span>
                         <span class="detail-lbl">Hujan</span>
                     </div>
                 </div>
@@ -49,7 +105,7 @@
                 <div class="weather-detail-item">
                     <span class="material-icons detail-icon" style="color: var(--color-primary);">cloud</span>
                     <div>
-                        <span class="detail-val">45%</span>
+                        <span class="detail-val" id="user-weather-clouds">-%</span>
                         <span class="detail-lbl">Awan</span>
                     </div>
                 </div>
@@ -57,7 +113,7 @@
                 <div class="weather-detail-item">
                     <span class="material-icons detail-icon" style="color: var(--color-primary);">air</span>
                     <div>
-                        <span class="detail-val">3.5 m/s</span>
+                        <span class="detail-val" id="user-weather-wind">- m/s</span>
                         <span class="detail-lbl">Angin</span>
                     </div>
                 </div>
@@ -78,20 +134,24 @@
             </div>
             <select class="filter-select" id="filter-category">
                 <option value="">Semua Kategori</option>
-                <option value="Sejarah">Sejarah</option>
                 <option value="Alam">Alam</option>
-                <option value="Pantai">Pantai</option>
                 <option value="Budaya">Budaya</option>
-                <option value="Belanja">Belanja</option>
-                <option value="Hiburan">Hiburan</option>
+                <option value="Kuliner">Kuliner</option>
+                <option value="Keramaian">Keramaian</option>
+                <option value="Petualangan">Petualangan</option>
             </select>
             <select class="filter-select" id="sort-by">
-                <option value="random">Acak</option>
+                <option value="recommendation" selected>Rekomendasi Pintar</option>
                 <option value="rating">Rating Tertinggi</option>
                 <option value="price-low">Harga Terendah</option>
                 <option value="price-high">Harga Tertinggi</option>
                 <option value="name">Nama A-Z</option>
+                <option value="random">Acak</option>
             </select>
+            <button class="btn btn-secondary" id="refresh-distance-btn" title="Perbarui Jarak & Lokasi" style="cursor: pointer; gap: var(--space-1); display: inline-flex; align-items: center;">
+                <span class="material-icons" style="font-size: 18px;">refresh</span>
+                <span>Perbarui Jarak</span>
+            </button>
         </div>
 
         <!-- Cards Grid -->
@@ -144,12 +204,14 @@
 
                 <!-- Modal Body (Scrollable) -->
                 <div class="dest-modal-body">
-                    <!-- Jarak User (Hanya jika Login) -->
-                    <div class="dest-modal-section" id="modal-distance-section" style="display: none;">
+                    <!-- Jarak User & Peta Rute -->
+                    <div class="dest-modal-section" id="modal-distance-section">
                         <h4 class="section-title-small"><span class="material-icons">near_me</span> Lokasi & Jarak</h4>
-                        <div class="dest-card-distance" id="modal-distance-box" style="margin-bottom: 0;">
+                        <div class="dest-card-distance" id="modal-distance-box" style="margin-bottom: var(--space-3);">
                             <!-- Populated by JS -->
                         </div>
+                        <!-- Container Map Leaflet -->
+                        <div id="modal-route-map" style="height: 250px; width: 100%; border-radius: var(--radius-lg); z-index: 10;"></div>
                     </div>
 
                     <!-- Section: Deskripsi -->
@@ -272,5 +334,6 @@
     const DESTINATIONS_DATA = JSON.parse(document.getElementById('destinations-data').textContent);
     const IS_USER_LOGGED_IN = document.getElementById('user-logged-in').textContent.trim() === 'true';
 </script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}
